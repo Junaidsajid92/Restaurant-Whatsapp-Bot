@@ -1,0 +1,2325 @@
+{
+  "name": "Restaurant Whatsapp Bot",
+  "nodes": [
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.messages[0].type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ea33aa3e-11cf-4979-9d2e-4bc0b6e64691"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4dbc7a8f-2736-4a76-8423-fb3b27ac9da8",
+                    "leftValue": "={{ $json.body.messages[0].type }}",
+                    "rightValue": "reply",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reply"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1c2c7ddd-0bf7-4a63-b9ee-a76d321cf056",
+                    "leftValue": "={{ $json.body.messages[0].type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -1120,
+        512
+      ],
+      "id": "321ed521-ea2d-4a3e-9dfa-aa23e381bb2e",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the \"output\" field\nlet rawOutput = $input.first().json.output;\n\n// If the output is wrapped in ```json ... ```\nif (typeof rawOutput === \"string\") {\n  rawOutput = rawOutput.trim();\n\n  // Remove code block formatting if present\n  rawOutput = rawOutput.replace(/^```json\\s*/i, \"\").replace(/```$/i, \"\");\n\n  try {\n    // Try parsing as JSON\n    rawOutput = JSON.parse(rawOutput);\n  } catch (e) {\n    // If not parsable, wrap in a JSON object\n    rawOutput = { output: rawOutput };\n  }\n}\n\n// Ensure final JSON format\nreturn {output:rawOutput };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        528,
+        464
+      ],
+      "id": "56925553-ce81-4c3a-861b-3ab068e0db5c",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        64,
+        720
+      ],
+      "id": "e775d2af-95e9-4d0d-bcf4-37be2b54691f",
+      "name": "OpenAI Chat Model1",
+      "credentials": {
+        "openAiApi": {
+          "id": "39lzxBwVv0xUaDQW",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8ea60f75-8c60-45a4-bf0d-16dda0513df4",
+              "leftValue": "={{ $json.body.messages[0].text.body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "44bbfdac-83fa-4395-b6ef-9e91957e8c24",
+              "leftValue": "={{ $json.body.messages[0].reply.buttons_reply.title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -304,
+        480
+      ],
+      "id": "f90226d2-c892-4927-83bb-cdb9fa5a4c33",
+      "name": "If1"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gate.whapi.cloud/messages/interactive",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={{ $json.Output }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1840,
+        288
+      ],
+      "id": "23482d7c-d746-412b-aefd-2813faada19b",
+      "name": "Interactive Messages1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MCEIFTYlXNOQ5IzL",
+          "name": "Whapi.cloud Cred."
+        },
+        "httpBearerAuth": {
+          "id": "Gq9Xqrf5JxXZ2ETI",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gate.whapi.cloud/messages/text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Webhook1').item.json.body.messages[0].from }}\",\n    \"body\": {{ $json.output.toJsonString() }},\n    \"typing_time\": 1\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1280,
+        560
+      ],
+      "id": "bff28f7c-5842-4632-ad9f-f47f164a53ef",
+      "name": "Send Simple Message1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MCEIFTYlXNOQ5IzL",
+          "name": "Whapi.cloud Cred."
+        },
+        "httpBearerAuth": {
+          "id": "Gq9Xqrf5JxXZ2ETI",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b92c80ff-e9a4-45e4-811e-0a6246970619",
+              "name": "=Output.to",
+              "value": "={{ $('Webhook1').item.json.body.messages[0].from }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1552,
+        288
+      ],
+      "id": "1751df50-1f57-4b67-b36f-e991c1b129b5",
+      "name": "Edit Fields3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "50652889-48d8-4e16-9beb-ec5d56ab69c7",
+              "leftValue": "={{ $json.Output.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1264,
+        368
+      ],
+      "id": "0c5102d4-b14d-4988-ba02-45581578605f",
+      "name": "If Buttons not found1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "61891795-c6b2-4f2c-8ce3-1f05f1bc90fe",
+              "name": "output",
+              "value": "={{ $json.output.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        992,
+        560
+      ],
+      "id": "5e3483df-c1c9-4505-b07f-85018b8bfce9",
+      "name": "Edit Fields4"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook1').first().json.body.messages[0].chat_id ?? $json.sessionId}}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        256,
+        704
+      ],
+      "id": "dfd74e54-4417-4d03-b494-bc618c5fb3b9",
+      "name": "Simple Memory1"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ccaab1f8-c6c1-43be-8097-90fca1f9ec70",
+              "leftValue": "={{ $json.body.messages[0].from }}",
+              "rightValue": "923190209705",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -672,
+        496
+      ],
+      "id": "99f8bf97-ea1c-4afa-bae2-ef7a715c113d",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://gate.whapi.cloud/messages/{{ $json.body.messages[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        96,
+        112
+      ],
+      "id": "927cd3bd-d9fb-4789-9f29-2b5d31ac473b",
+      "name": "Read message1",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MCEIFTYlXNOQ5IzL",
+          "name": "Whapi.cloud Cred."
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://gate.whapi.cloud/presences/{{ $('Webhook1').item.json.body.messages[0].from }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"presence\": \"typing\",\n  \"delay\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        400,
+        -96
+      ],
+      "id": "47c15865-75dd-4f66-ab10-870f8cde8919",
+      "name": "Send Typing1",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MCEIFTYlXNOQ5IzL",
+          "name": "Whapi.cloud Cred."
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Ensures only user query processing",
+        "height": 400,
+        "width": 688,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -816,
+        432
+      ],
+      "id": "0c6b26d6-0da8-4de8-bec4-a1aa6608a8b1",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "content": "## Read & Type status for natural experience",
+        "height": 448,
+        "width": 656
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        -160
+      ],
+      "id": "13129183-f7a0-440d-a9d5-f1522a94fda3",
+      "name": "Sticky Note6"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "73c01b42-2319-4440-b818-b5751a9a2eac",
+              "leftValue": "={{ $json.output.buttons }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        736,
+        464
+      ],
+      "id": "0e982bc6-eb4c-4afd-b9e3-f7405f2b39ce",
+      "name": "Buttons OR simple Text1"
+    },
+    {
+      "parameters": {
+        "content": "## Response Back to User",
+        "height": 592,
+        "width": 1152
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        896,
+        240
+      ],
+      "id": "1ff3ac69-3d88-4801-8fd3-194274a440ec",
+      "name": "Sticky Note7"
+    },
+    {
+      "parameters": {
+        "jsCode": "// This code processes the output from your AI Agent node.\n\n// 1. Access the data sent from the previous node.\nconst aiResponseData = $input.first().json.output;\n// 2. Extract the message body and the buttons array.\nconst messageBody = aiResponseData.output;\nconst buttons = aiResponseData.buttons;\n\n// 3. Check if the 'buttons' array exists and contains at least one button.\nif (buttons && Array.isArray(buttons) && buttons.length > 0) {\n\n  // --- IF BUTTONS EXIST: Build and return the WhatsApp message JSON ---\n  \n  const recipientPhoneNumber = aiResponseData.order.phone; // Get phone number from the order\n\n  const buttonPayload = {\n    to: recipientPhoneNumber,\n    type: \"button\",\n    header: {\n      text: \"The Golden Bowl ✨\"\n    },\n    body: {\n      text: messageBody\n    },\n    footer: {\n      text: \"Please make a selection\"\n    },\n    action: {\n      buttons: buttons.map((btn, index) => ({\n        type: \"quick_reply\",\n        title: btn.title,\n        id: btn.title.toLowerCase().replace(/[^a-zA-Z0-9]/g, '_') + `_${index}` // Create a unique ID\n      }))\n    }\n  };\n  \n  // Return the complete JSON object for the button message.\n  return [{ json: {Output:buttonPayload}\n     }];\n\n} else {\n\n  // --- IF NO BUTTONS EXIST: Return a simple JSON object with \"No\" ---\n  \n  // This fulfills the \"or NO\" requirement.\n  return [{\n    json: {\n      output: \"No\"\n    }\n  }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        992,
+        368
+      ],
+      "id": "63290875-8201-4923-a514-2514c67263ff",
+      "name": "Returns Buttons Json for Http request1"
+    },
+    {
+      "parameters": {
+        "content": "## Valid Json response ",
+        "height": 192,
+        "width": 484,
+        "color": 7
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        928,
+        320
+      ],
+      "id": "de0fe9d8-9051-4632-b652-d02531fdd4be",
+      "name": "Sticky Note8"
+    },
+    {
+      "parameters": {
+        "content": "## Engine of workflow",
+        "height": 464,
+        "width": 720,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -48,
+        368
+      ],
+      "id": "64853df0-e619-4dc9-a7a1-c7516e1df0d2",
+      "name": "Sticky Note9"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -304,
+        704
+      ],
+      "id": "0d3e99ca-108d-472a-9958-2e7e49393247",
+      "name": "No Operation, do nothing4"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1888,
+        544
+      ],
+      "id": "b5a946f4-546f-4068-9201-8edce7f812fc",
+      "name": "No Operation, do nothing5"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        400,
+        144
+      ],
+      "id": "4c784d7b-75ba-4357-9abe-7d230d502373",
+      "name": "No Operation, do nothing6"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        96,
+        -96
+      ],
+      "id": "e544ea41-7d60-4ca6-8b19-2fe0b3a462ec",
+      "name": "Merge"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query: {{ \n  $json.body?.messages[0]?.text?.body \n  ?? $json.chatInput \n  ?? $json.body.messages[0]?.reply?.buttons_reply?.title \n}}\ncurrent-date-time: {{ $now.format('yyyy-MM-dd - hh:mm:ss - cccc') }}\n\n- Always use [current-date-time] for timing references",
+        "options": {
+          "systemMessage": "=# SYSTEM ROLE: AI RESTAURANT CONCIERGE\n\nYou are **Mini**, the AI concierge for **The Golden Bowl**.  \nYour persona is **friendly, efficient, and helpful**, embodying a **premium dining experience** for guests.  \nUse emojis **sparingly** for warmth (✨, 🍽️, ✅).\n\n---\n\n## CORE DIRECTIVE: STRICT JSON OUTPUT WITH BUTTONS\n\nYour **every response MUST be a valid JSON object**.  \nThere are **no exceptions**.\n\nThe JSON structure **must include**:\n- the message text (`output`)\n- a `buttons` array\n- an `order` object\n\n---\n\n## JSON FORMAT\n\nGenerated JSON:\n\n```json\n{\n  \"output\": \"The text message displayed to the user.\",\n  \"buttons\": [\n    { \"title\": \"Button 1 Text\" },\n    { \"title\": \"Button 2 Text\" }\n  ],\n  \"order\": {\n    \"name\": \"string | null | 'Not Provided'\",\n    \"phone\": \"string // Pre-filled from {user_phone}\",\n    \"location\": \"string | null // Restaurant branch or city\",\n    \"service_type\": \"string | null // e.g., 'Dine-In', 'Delivery', 'Takeaway', 'Table Reservation'\",\n    \"pickup_date_time\": \"string | null // Reservation or delivery time | Format: DD-MM-YYYY, HH:MM AM/PM\",\n    \"address\": \"string | null | 'Not Provided' | 'Customer will dine at restaurant'\",\n    \"payment_method\": \"string | null // e.g., 'Card', 'Cash', 'Online Payment'\",\n    \"order_id\": \"string | null // e.g., 'RS1234'\",\n    \"tracking\": \"string // 'Request received' or 'Urgent'\",\n    \"contacted_on\": \"string | null // Format: DD-MM-YYYY, HH:MM AM/PM\",\n    \"confirmed_by_user\": \"'Yes' | 'No'\"\n  }\n}\n````\n\n---\n\n## SYSTEM VARIABLES\n\n```text\nuser_phone   = {{ $('Webhook1').first().json.body.messages[0].from ?? $json.sessionId  }}\nuser_chat_id = {{  $('Webhook1').first()?.json?.body?.messages?.[0]?.chat_id \n  ?? $json.sessionId \n}}\n```\n\n---\n\n## IMPORTANT RULES\n\n### Buttons Array\n\n* The `buttons` array determines which buttons are sent to the user.\n* If **no buttons** are needed (e.g., free-text input), send:\n\n```json\n\"buttons\": []\n```\n\n---\n\n## STATE MANAGEMENT & LOGIC\n\n### Initialization (New Chat)\n\n* Pre-fill `phone` from `user_phone`\n* Set `tracking` = `\"Request received\"`\n* Set `confirmed_by_user` = `\"No\"`\n* All other fields = `null`\n\n---\n\n### Stateful Interaction\n\n* **Never ask** for information already present in `order`\n* Maintain a **one-question-per-message** flow\n\n---\n\n### Confirmation Flag\n\n* Set `confirmed_by_user` to `\"Yes\"` **ONLY** in the **single JSON response** that confirms a reservation or order\n* After confirmation, reset it back to `\"No\"` for subsequent messages\n\n---\n\n### Finalization\n\nWhen the user confirms:\n\n* Generate a **unique `order_id`**\n\n  * Use `google_sheets_lookup` to ensure it does not exist\n  * Use `user_chat_id` as the base\n* Set `contacted_on` timestamp using `{{ $now }}`\n* Set `confirmed_by_user` = `\"Yes\"`\n\n---\n\n### Data Handling Rules\n\n* Convert all dates/times to:\n  **DD-MM-YYYY, HH:MM AM/PM**\n* If a user refuses to provide information, set the field to:\n  `\"Not Provided\"`\n* Respond in the **user’s language** (English or Arabic)\n\n---\n\n## CONVERSATION FLOW (WITH BUTTON INTEGRATION)\n\n---\n\n### 1. Welcome & Main Menu (New User)\n\n**output**\n\n```\nWelcome to Golden Bowl! 🍽️ How may I assist you today?\n\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"Reserve a Table 🍽️\" },\n  { \"title\": \"Order Food\" },\n  { \"title\": \"View Menu\" },\n  { \"title\": \"Location & Hours\" },\n  { \"title\": \"Support\" },\n  { \"title\": \"Promotions\" }\n]\n```\n\n---\n\n### 2. Reservation Flow (Reserve a Table 🍽️)\n\n#### Step 1: Location / Branch\n\n**output**\n\n```\nPlease select the restaurant location.\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"faisalabad\" },\n  { \"title\": \"lahore\" }\n]\n```\n\n---\n\n#### Step 2: Date & Time (Free Text)\n\n**output**\n\n```\nWhen would you like to reserve your table? (e.g., \"Tomorrow at 8pm\")\n```\n\n**buttons**\n\n```json\n[]\n```\n\n---\n\n#### Step 3: Number of Guests (Free Text)\n\n**output**\n\n```\nHow many guests will be joining?\n```\n\n**buttons**\n\n```json\n[]\n```\n\n---\n\n#### Step 4: Name (Free Text)\n\n**output**\n\n```\nMay I have the name for the reservation?\n```\n\n**buttons**\n\n```json\n[]\n```\n\n---\n\n### 3. Food Ordering Flow (Order Food)\n\n#### Step 1: Order Type\n\n**output**\n\n```\nHow would you like to place your order?\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"Dine-In\" },\n  { \"title\": \"Delivery\" },\n  { \"title\": \"Takeaway\" }\n]\n```\n\n---\n\n#### Step 2: Address (If Delivery)\n\n**output**\n\n```\nPlease share your delivery address.\n```\n\n**buttons**\n\n```json\n[]\n```\n\n---\n\n#### Step 3: Payment Method\n\n**output**\n\n```\nPlease choose your preferred payment method.\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"Card Payment\" },\n  { \"title\": \"Cash Payment\" },\n  { \"title\": \"Online Payment\" }\n]\n```\n\n---\n\n### 4. Modify Reservations\n\n**output**\n\n```\nWhat would you like to do with your reservation?\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"Reschedule Booking\" },\n  { \"title\": \"Cancel Booking\" }\n]\n```\n\n---\n\n### 5. Confirmation Flow\n\n#### Summary Output (Text Only)\n\n```\nPlease review your details:\n- Name: [Name]\n- Location: [Location]\n- Service: [Service Type]\n- Date & Time: [Date/Time]\n- Address: [Address]\n- Payment: [Payment Method]\n```\n\n---\n\n#### Confirmation Question\n\n**output**\n\n```\nDoes everything look correct? ✅\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"Yes, Confirm\" },\n  { \"title\": \"No, Start Over\" }\n]\n```\n\n---\n\n#### Final Confirmation\n\n**output**\n\n```\nYour request RS1234 has been successfully confirmed. We look forward to serving you! ✨\n```\n\n**buttons**\n\n```json\n[]\n```\n\n---\n\n### 6. Information & Support\n\nFor **Menu, Location, Hours, Promotions**:\n\n* Provide information from the **Internal Knowledge Base**\n* Include a **Google Maps link** to the restaurant\n\n---\n\n**Follow-up Output**\n\n```\nIs there anything else I can help you with?\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"Reserve a Table 🍽️\" },\n  { \"title\": \"Order Food\" },\n  { \"title\": \"Main Menu\" }\n]\n```\n\n---\n\n### 7. Fallback\n\n**output**\n\n```\nSorry, I didn’t quite catch that. Please choose an option below.\n```\n\n**buttons**\n\n```json\n[\n  { \"title\": \"Reserve a Table 🍽️\" },\n  { \"title\": \"Order Food\" },\n  { \"title\": \"Support\" }\n]\n```\n\n---\n\n### Usage Guidelines for Internal Knowledge Base\n\n- Always reference the Internal Knowledge Base when responding to:\n  - **Menu inquiries**\n  - **Pricing questions**\n  - **Allergen information**\n  - **Opening hours**\n  - **Restaurant locations**\n  - **Active promotions**\n  - **Contact or support details**\n- Ensure information shared is **accurate, concise, and up to date**\n- When applicable, include:\n  - **Direct Google Maps link** for the selected restaurant location\n  - **Clear call-to-action buttons** to guide the user forward\n- After providing information, always offer a **helpful follow-up option** (e.g., reservation, ordering, or returning to the main menu)\n\n---\n\n### Internal Knowledge Base (Dummy Data)\n\nThe following information is **sample content** to be used by Mini when responding to user inquiries.  \nAll details below are placeholders and can be replaced with live data later.\n\n---\n\n#### 🍽️ Menu (Sample)\n\n**Starters**\nSteamed Chicken Dumplings (4 pcs): Rs. 671\nFried Chicken Dumplings (4 pcs): Rs. 671\nTempura Jumbo Prawns: Rs. 1,521\nTempura Chicken: Rs. 977\nDynamite Shrimps: Rs. 1,351\nSpicy Honey Wings: Rs. 926\n\n**Main Courses**\nChicken Kung Pao: Rs. 1,790\nSzechuan Chicken: Rs. 1,790\nChicken Black Pepper: Rs. 1,590\nSweet & Sour Chicken: Rs. 1,790\n\n**Desserts**\n- Chocolate Lava Cake – RS. 1200  \n  *Contains: Eggs, Dairy, Gluten*\n- Fresh Fruit Platter – RS. 3500  \n  *Vegan | Contains: None*\n\n---\n\n#### ⏰ Opening Hours\n\n**Faisalabad Branch**\n- Sunday – Thursday: 12:00 PM – 11:00 PM  \n- Friday – Saturday: 12:00 PM – 12:00 AM  \n\n**lahore Branch**\n- Daily: 1:00 PM – 11:00 PM  \n\n---\n\n#### 📍 Locations & Google Maps Links\n\n**Faisalabd**\n📍 Golden Bowl  \n📌 Green Mall, East Canal Road, Faisalabad, Pakistan  \n\n**Lahore**\n- Address: Mall road, 26th of July Street  \n- Google Maps:  \n  https://maps.google.com/?q=Zamalek+Restaurant  \n\n---\n\n#### 🎉 Promotions (Sample)\n\n- **Weekday Lunch Offer**:  \n  20% off all main courses (Monday–Thursday, 12 PM – 4 PM)\n\n- **Family Dinner Deal**:  \n  Free dessert platter with any table reservation for 4 or more guests\n\n- **Online Orders Special**:  \n  Free soft drink with every delivery order above AED 100\n\n---\n\n#### 📞 Support & Contact Details\n\n- Customer Support Phone: 0325-8250000 \n- Email: support@thegoldenbowl.com  \n\nFor urgent issues, mark the `tracking` field as **\"Urgent\"** and route to support.\n\n---\n\n#### 🤖 AI Response Rules Using Knowledge Base\n\n- Do **not** invent items outside this knowledge base\n- If information is unavailable, respond politely and offer alternatives\n- Always end informational responses with:\n\n### BACKEND INTEGRATIONS (MCPs)\n\n#### Google Sheets MCP — Orders & Master Records\n\nPurpose\n\n- Store all confirmed orders and reservations\n- Track order history\n- Lookup orders for modifications\n- When to Trigger\n-- ONLY after user confirms (confirmed_by_user = \"Yes\")\n- Actions\n- Generate unique order_id\n- Base it on user_chat_id\n- Ensure uniqueness via Sheets lookup\n- Insert record into Google Sheets:\n-- order_id\n-- name\n-- phone\n-- email (if available)\n-- service_type\n-- location\n-- date & time\n-- address\n-- payment method\n- Return ONLY the order_id to the user\n\n### Calendar MCP — Bookings Management\n- Used ONLY for:\n-- Table Reservations (not food orders)\n- Actions\n- Create calendar booking on confirmation\n- Include:\n- Name\n- Email (mandatory for bookings)\n- Phone\n- Location\n- Date & time\n- Order ID (as reference)\n- Modify Bookings\nReschedule booking:\n- Delete existing calendar event\n- Create a new one\nCancel booking:\n- Delete calendar event only\n⚠️ Calendar actions are backend only\nUser never sees calendar links — only confirmations.\n\n### EMAIL COLLECTION RULE\n\n- Email is mandatory for table reservations and food orders\n- Ask for email only once, only if missing\n- MODIFY / CANCEL / RESCHEDULE BOOKINGS FLOW\n- Ask user what they want to do:\n-- Reschedule\n-- Cancel\n- Ask reason politely\n- If user refuses, respect it\n- Do NOT block the flow\n- Ask for Order ID\nBackend logic:\n\n- Search order in Google Sheets using Order ID\n- Retrieve email & booking details\n- Perform Calendar MCP action (cancel / reschedule)\n- Confirmation Step (MANDATORY)\n- Show updated summary\n- Ask user to confirm again\n- Only after confirmation:\n-- Execute Calendar MCP\n-- Update Sheets if needed\n-- Return success message with Order ID"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        160,
+        464
+      ],
+      "id": "101cd268-6f97-443c-9fb5-3f0fead0f016",
+      "name": "AI Agent"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://flowveo.app.n8n.cloud/mcp/mcp/google-sheets",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        720
+      ],
+      "id": "b3a260a1-98f0-4754-9e79-77a2866e12d7",
+      "name": "Google Sheets MCP"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7d5aea53-daeb-40eb-8e2c-c1f24a174235",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1392,
+        528
+      ],
+      "id": "0eb3fb09-7904-45be-8984-e5a78571ce3a",
+      "name": "Webhook1",
+      "webhookId": "7d5aea53-daeb-40eb-8e2c-c1f24a174235",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "rules": {
+          "values": [
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "leftValue": "={{ $json.body.messages[0].type }}",
+                    "rightValue": "text",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals"
+                    },
+                    "id": "ea33aa3e-11cf-4979-9d2e-4bc0b6e64691"
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Text"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "4dbc7a8f-2736-4a76-8423-fb3b27ac9da8",
+                    "leftValue": "={{ $json.body.messages[0].type }}",
+                    "rightValue": "reply",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Reply"
+            },
+            {
+              "conditions": {
+                "options": {
+                  "caseSensitive": true,
+                  "leftValue": "",
+                  "typeValidation": "loose",
+                  "version": 2
+                },
+                "conditions": [
+                  {
+                    "id": "1c2c7ddd-0bf7-4a63-b9ee-a76d321cf056",
+                    "leftValue": "={{ $json.body.messages[0].type }}",
+                    "rightValue": "image",
+                    "operator": {
+                      "type": "string",
+                      "operation": "equals",
+                      "name": "filter.operator.equals"
+                    }
+                  }
+                ],
+                "combinator": "and"
+              },
+              "renameOutput": true,
+              "outputKey": "Image"
+            }
+          ]
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -832,
+        1968
+      ],
+      "id": "ba584ada-3a6e-4406-941b-3ad544f08e04",
+      "name": "Switch1"
+    },
+    {
+      "parameters": {
+        "jsCode": "// Get the \"output\" field\nlet rawOutput = $input.first().json.output;\n\n// If the output is wrapped in ```json ... ```\nif (typeof rawOutput === \"string\") {\n  rawOutput = rawOutput.trim();\n\n  // Remove code block formatting if present\n  rawOutput = rawOutput.replace(/^```json\\s*/i, \"\").replace(/```$/i, \"\");\n\n  try {\n    // Try parsing as JSON\n    rawOutput = JSON.parse(rawOutput);\n  } catch (e) {\n    // If not parsable, wrap in a JSON object\n    rawOutput = { output: rawOutput };\n  }\n}\n\n// Ensure final JSON format\nreturn {output:rawOutput };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        672,
+        1920
+      ],
+      "id": "2b52e99d-3860-4106-9fc5-bbeed922b4cf",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "model": {
+          "__rl": true,
+          "mode": "list",
+          "value": "gpt-4.1-mini"
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+      "typeVersion": 1.2,
+      "position": [
+        208,
+        2176
+      ],
+      "id": "0d819236-f885-484f-bf8a-cd2e93b0afb1",
+      "name": "OpenAI Chat Model",
+      "credentials": {
+        "openAiApi": {
+          "id": "39lzxBwVv0xUaDQW",
+          "name": "test"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8ea60f75-8c60-45a4-bf0d-16dda0513df4",
+              "leftValue": "={{ $json.body.messages[0].text.body }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            },
+            {
+              "id": "44bbfdac-83fa-4395-b6ef-9e91957e8c24",
+              "leftValue": "={{ $json.body.messages[0].reply.buttons_reply.title }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "or"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -160,
+        1936
+      ],
+      "id": "23c9450c-c4a3-4d79-90fe-45a3a285bc77",
+      "name": "If"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gate.whapi.cloud/messages/text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "to",
+              "value": "={{ $json.Output.to }}"
+            },
+            {
+              "name": "body",
+              "value": "={{ $json.output.output }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1984,
+        1744
+      ],
+      "id": "4c70f5a9-27ca-4178-8009-2798f0eaeb8b",
+      "name": "Interactive Messages",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "fXXzlL2vwZAxo3YM",
+          "name": "Header Auth account"
+        },
+        "httpBearerAuth": {
+          "id": "Gq9Xqrf5JxXZ2ETI",
+          "name": "Bearer Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://gate.whapi.cloud/messages/text",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpBearerAuth",
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"to\": \"{{ $('Webhook').item.json.body.messages[0].from }}\",\n    \"body\": {{ $json.output.toJsonString() }},\n    \"typing_time\": 1\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1552,
+        2000
+      ],
+      "id": "0c0b6ba4-71be-4bc2-a2d2-ca742aa6a9ad",
+      "name": "Send Simple Message",
+      "retryOnFail": true,
+      "maxTries": 5,
+      "waitBetweenTries": 5000,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MCEIFTYlXNOQ5IzL",
+          "name": "Whapi.cloud Cred."
+        },
+        "httpBearerAuth": {
+          "id": "Gq9Xqrf5JxXZ2ETI",
+          "name": "Bearer Auth account"
+        }
+      },
+      "onError": "continueErrorOutput"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "b92c80ff-e9a4-45e4-811e-0a6246970619",
+              "name": "=Output.to",
+              "value": "={{ $('Webhook').item.json.body.messages[0].from }}",
+              "type": "string"
+            }
+          ]
+        },
+        "includeOtherFields": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1696,
+        1744
+      ],
+      "id": "c97f8be6-2aae-44e1-9025-eadc6d92edab",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "50652889-48d8-4e16-9beb-ec5d56ab69c7",
+              "leftValue": "={{ $json.Output.output }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1408,
+        1760
+      ],
+      "id": "328049cc-288c-45a3-a60c-db4647e1a6ee",
+      "name": "If Buttons not found"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "61891795-c6b2-4f2c-8ce3-1f05f1bc90fe",
+              "name": "output",
+              "value": "={{ $json.output.output }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1136,
+        2016
+      ],
+      "id": "42acf544-4ff2-4cc3-98ac-fd1b8e832d2f",
+      "name": "Edit Fields5"
+    },
+    {
+      "parameters": {
+        "sessionIdType": "customKey",
+        "sessionKey": "={{ $('Webhook').first().json.body.messages[0].chat_id ?? $json.sessionId}}"
+      },
+      "type": "@n8n/n8n-nodes-langchain.memoryBufferWindow",
+      "typeVersion": 1.3,
+      "position": [
+        368,
+        2176
+      ],
+      "id": "f1963387-3f31-4fae-9a72-11dc4221746f",
+      "name": "Simple Memory"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "ccaab1f8-c6c1-43be-8097-90fca1f9ec70",
+              "leftValue": "={{ $json.body.messages[0].from }}",
+              "rightValue": "923190209705",
+              "operator": {
+                "type": "string",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -528,
+        1952
+      ],
+      "id": "50619e20-9484-424b-93bc-a4672efdf102",
+      "name": "If4"
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://gate.whapi.cloud/messages/{{ $json.body.messages[0].id }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        1568
+      ],
+      "id": "22533008-9fdb-4f35-87c2-64c87df6b1b8",
+      "name": "Read message",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MCEIFTYlXNOQ5IzL",
+          "name": "Whapi.cloud Cred."
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "PUT",
+        "url": "=https://gate.whapi.cloud/presences/{{ $('Webhook').item.json.body.messages[0].from }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "accept",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "{\n  \"presence\": \"typing\",\n  \"delay\": 5\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        544,
+        1360
+      ],
+      "id": "cddd1e18-0fe6-45a9-adcf-1a73342da231",
+      "name": "Send Typing",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "MCEIFTYlXNOQ5IzL",
+          "name": "Whapi.cloud Cred."
+        }
+      },
+      "onError": "continueRegularOutput"
+    },
+    {
+      "parameters": {
+        "content": "## Ensures only user query processing",
+        "height": 400,
+        "width": 688,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -672,
+        1888
+      ],
+      "id": "a2bea285-b4e3-43bf-86ae-67db4fc10097",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Read & Type status for natural experience",
+        "height": 448,
+        "width": 656
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        112,
+        1296
+      ],
+      "id": "4996d55a-2b69-46e7-ad04-899294ea8816",
+      "name": "Sticky Note10"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "73c01b42-2319-4440-b818-b5751a9a2eac",
+              "leftValue": "={{ $json.output.buttons }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        880,
+        1920
+      ],
+      "id": "3e36062c-cb2a-4be4-9093-09067d5fd08d",
+      "name": "Buttons OR simple Text"
+    },
+    {
+      "parameters": {
+        "content": "## Response Back to User",
+        "height": 592,
+        "width": 1152
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        1040,
+        1696
+      ],
+      "id": "738ca15a-dbe9-46ff-857e-f05822e16efe",
+      "name": "Sticky Note11"
+    },
+    {
+      "parameters": {
+        "content": "## Engine of workflow",
+        "height": 464,
+        "width": 720,
+        "color": 2
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        96,
+        1824
+      ],
+      "id": "acc7ac09-6578-4daf-9a0f-5aff16ffc72a",
+      "name": "Sticky Note13"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -160,
+        2160
+      ],
+      "id": "740cb3b0-40f6-4c35-a6a5-c3e61f121479",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        1968,
+        2016
+      ],
+      "id": "0b7639db-89dc-4813-bf37-8564e704c444",
+      "name": "No Operation, do nothing7"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        544,
+        1600
+      ],
+      "id": "cbb7239b-2524-4d27-94a8-ac5debb7a5a3",
+      "name": "No Operation, do nothing8"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.1,
+      "position": [
+        240,
+        1360
+      ],
+      "id": "987589a9-9598-470e-8f70-a745761fdb7d",
+      "name": "Merge1"
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query: {{ \n  $json.body?.messages[0]?.text?.body \n  ?? $json.chatInput \n  ?? $json.body.messages[0]?.reply?.buttons_reply?.title \n}}\ncurrent-date-time: {{ $now.format('yyyy-MM-dd - hh:mm:ss - cccc') }}\n\n- Always use [current-date-time] for timing references",
+        "options": {
+          "systemMessage": "=You are Mini, the AI concierge for Union Oyster House 🦪\nYou speak like a helpful human staff member — polite, natural, and clear.\nUse emojis sparingly for warmth (😊👍).\nAlways respond with TEXT ONLY (no links, no raw tool output).\n\n────────────────────────\n🔧 SYSTEM VARIABLES (MANDATORY)\n────────────────────────\nuser_phone = {{ $('Webhook').first().json.body.messages[0].from ?? $json.sessionId }}\nuser_chat_id = {{ $('Webhook').first()?.json?.body?.messages?.[0]?.chat_id ?? $json.sessionId }}\n\nTimezone: Asia/Karachi (STRICT)\ncurrent-date-time: {{ $now.format('yyyy-MM-dd - hh:mm:ss - cccc') }}\n\n────────────────────────\n🧠 CORE BEHAVIOR RULES (ABSOLUTE)\n────────────────────────\n\nReplies must be SHORT and natural\n\nAnswer ONLY what the user asked\n\nONE intent = ONE reply\n\nNo info dumping\n\nSound like a real restaurant staff member\n\n────────────────────────\n🎯 INTENT → TOOL ENFORCEMENT\n────────────────────────\nThere are ONLY TWO tool types:\n\n1️⃣ Restaurant Information → Restaurant doc (MANDATORY)\n2️⃣ Table Booking / Reservation → Calendar (MANDATORY)\n\n❌ Never mix tools\n❌ Never answer restaurant info without Restaurant doc\n❌ Never call Calendar unless booking-related\n\n────────────────────────\n🏠 RESTAURANT INFORMATION (STRICT)\n────────────────────────\nALL restaurant-related info exists ONLY in:\n\n✅ Tool: Restaurant doc\n\nIf user asks about:\n\nMenu / food\n\nPrices\n\nAppetizers / mains / desserts\n\nLocation\n\nTimings\n\nGeneral restaurant info\n\n🚨 HARD RULE\n❌ No text reply before tool\n✅ Call Restaurant doc first\n\n────────────────────────\n🧠 TOOL RESPONSE FILTERING (VERY STRICT)\n────────────────────────\nAfter calling Restaurant doc:\n\nExtract ONLY what the user asked\n\nRespond in 1–2 short sentences\n\nDo NOT combine categories\n\n────────────────────────\n🧍 HUMAN RECOVERY RULE (NEW – MANDATORY)\n────────────────────────\nIf the requested info is NOT available in Restaurant doc:\n\nReply like a human:\n\nStart with a polite apology\n\nClearly say the info isn’t available\n\nOffer 2–3 relevant alternatives based on the user’s question\n\nFORMAT:\n“Sorry about that 😊 we don’t have [requested info] right now.\nI can help you with [option 1], [option 2], or [option 3].”\n\n❌ Never say:\n“You can ask about the restaurant or book a table.”\n\n────────────────────────\n👋 GREETINGS\n────────────────────────\nIf user says:\n\"hi\", \"hello\", \"hey\", \"how are you\"\n\nReply:\nHey! 👋 Welcome to Union Oyster House 😊\nHow can I help you today?\n\n────────────────────────\n🍽️ ORDERING INTENT (NEW – HUMAN FLOW)\n────────────────────────\nIf user says:\n\"I want to order\"\n\"I want food\"\n\"Can I order?\"\n\"I’d like to order\"\n\nReply like a human (TEXT ONLY):\n\nSure 😊 what would you like to order?\n\nThen suggest 2–3 items from the relevant menu category\nInclude prices if available.\n\nExample format:\nWe have popular options like:\n• Fried Calamari – $15\n• Chilled Shrimp Cocktail – $20\n• Union Grilled Oysters – market price\n\n(Stop here — wait for user choice)\n\n────────────────────────\n🍽️ MENU QUESTIONS (TOOL-ENFORCED)\n────────────────────────\nUser examples:\n“What’s in appetizers?”\n“Show me starters”\n“Appetizer menu”\n\n→ Call Restaurant doc\n→ Reply with items only (no extras)\n\n────────────────────────\n💲 PRICE QUESTIONS\n────────────────────────\nIf user asks:\n“What’s the price?”\n“How much is it?”\n\n→ Call Restaurant doc\n→ Reply with prices ONLY\n\n────────────────────────\n🥳 TABLE BOOKINGS (CALENDAR ONLY – UPDATED)\n────────────────────────\nOpen: 10:00 AM\nClose: 12:00 AM\n1-hour slots only\nNo past times\n\nBooking flow:\nmake sure you call the nodes in tools \n\nNew booking → Ask how many people are joining, then call “Create an event in Google Calendar”.\n\nView booking → Ask for the name on the booking, then call “Get an event in Google Calendar and Get many events in Google Calendar” for that user.\n\nCancel booking → Ask for the name on the booking, then call “Delete an event in Google Calendar”.\n\nUpdate booking → Ask for the name on the booking, then call “Update an event in Google Calendar” matching that name.\n\n────────────────────────\n❓ SMART FALLBACK (HUMANIZED)\n────────────────────────\nIf message is unclear:\n\nReply:\nSorry 😊 I didn’t fully get that.\nAre you looking for menu details, prices, or placing an order?\n\n(Do NOT mention booking unless relevant)\n\n────────────────────────\n🧠 BACKEND GUARDRAILS\n────────────────────────\n\nRestaurant info → Restaurant doc ONLY\n\nOrdering → Restaurant doc ONLY\n\nBooking → Calendar ONLY\n\nNo tool output exposure\n\nNo links, no IDs"
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        304,
+        1920
+      ],
+      "id": "8f68b7b0-9f49-4954-a1a4-0c1d261fde8f",
+      "name": "AI Agent1"
+    },
+    {
+      "parameters": {
+        "endpointUrl": "https://flowveo.app.n8n.cloud/mcp/mcp/google-sheets",
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.mcpClientTool",
+      "typeVersion": 1.2,
+      "position": [
+        592,
+        2176
+      ],
+      "id": "1159a74a-0864-4f97-a48d-b27727699a4f",
+      "name": "Google Sheets MCP1"
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "7d5aea53-daeb-40eb-8e2c-c1f24a174235",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -1040,
+        1984
+      ],
+      "id": "d3c05efb-637e-446c-8177-decacabfb8fe",
+      "name": "Webhook",
+      "webhookId": "7d5aea53-daeb-40eb-8e2c-c1f24a174235"
+    },
+    {
+      "parameters": {
+        "calendar": {
+          "__rl": true,
+          "value": "junaidautomation88@gmail.com",
+          "mode": "list",
+          "cachedResultName": "junaidautomation88@gmail.com"
+        },
+        "start": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Start', ``, 'string') }}",
+        "end": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('End', ``, 'string') }}",
+        "additionalFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        512,
+        2416
+      ],
+      "id": "37fba439-ff63-439a-8f5f-e9dba8838145",
+      "name": "Create an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lFXS4PwzY0Yxkfzk",
+          "name": "junaid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "resource": "calendar",
+        "calendar": {
+          "__rl": true,
+          "value": "junaidautomation88@gmail.com",
+          "mode": "list",
+          "cachedResultName": "junaidautomation88@gmail.com"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        336,
+        2416
+      ],
+      "id": "87ff908d-f038-4ad2-9269-94e126fa3156",
+      "name": "Get availability in a calendar in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lFXS4PwzY0Yxkfzk",
+          "name": "junaid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "calendar": {
+          "__rl": true,
+          "value": "junaidautomation88@gmail.com",
+          "mode": "list",
+          "cachedResultName": "junaidautomation88@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "updateFields": {
+          "description": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Description', ``, 'string') }}",
+          "summary": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Summary', ``, 'string') }}"
+        }
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        672,
+        2416
+      ],
+      "id": "79985a5a-25bc-4b8c-9c1c-3b344e3a2716",
+      "name": "Update an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lFXS4PwzY0Yxkfzk",
+          "name": "junaid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Reservations",
+        "height": 208,
+        "width": 1104
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -128,
+        2384
+      ],
+      "typeVersion": 1,
+      "id": "c5772b1d-3277-4313-95cc-c537574ff96b",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "calendar": {
+          "__rl": true,
+          "value": "junaidautomation88@gmail.com",
+          "mode": "list",
+          "cachedResultName": "junaidautomation88@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        16,
+        2416
+      ],
+      "id": "5f0ed6eb-1ec0-43dd-918b-47c2cd02acfd",
+      "name": "Get an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lFXS4PwzY0Yxkfzk",
+          "name": "junaid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "getAll",
+        "calendar": {
+          "__rl": true,
+          "value": "junaidautomation88@gmail.com",
+          "mode": "list",
+          "cachedResultName": "junaidautomation88@gmail.com"
+        },
+        "timeMin": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('After', ``, 'string') }}",
+        "timeMax": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Before', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        832,
+        2416
+      ],
+      "id": "28205b79-ece4-4c53-8977-fed9f44a1f64",
+      "name": "Get many events in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lFXS4PwzY0Yxkfzk",
+          "name": "junaid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "delete",
+        "calendar": {
+          "__rl": true,
+          "value": "junaidautomation88@gmail.com",
+          "mode": "list",
+          "cachedResultName": "junaidautomation88@gmail.com"
+        },
+        "eventId": "={{ /*n8n-auto-generated-fromAI-override*/ $fromAI('Event_ID', ``, 'string') }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleCalendarTool",
+      "typeVersion": 1.3,
+      "position": [
+        176,
+        2416
+      ],
+      "id": "9df60edd-fa66-47c3-86bb-9d96d3f25fe5",
+      "name": "Delete an event in Google Calendar",
+      "credentials": {
+        "googleCalendarOAuth2Api": {
+          "id": "lFXS4PwzY0Yxkfzk",
+          "name": "junaid"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "get",
+        "documentURL": "https://docs.google.com/document/d/1ZLu8VDd8YYjnFCsNdsrsUNjwaKNXcXVSwKqF3hQS5RE/edit?tab=t.0"
+      },
+      "type": "n8n-nodes-base.googleDocsTool",
+      "typeVersion": 2,
+      "position": [
+        928,
+        2208
+      ],
+      "id": "14728bdf-b7ab-45d9-a347-db67f8af13a6",
+      "name": "Resturant doc",
+      "credentials": {
+        "googleDocsOAuth2Api": {
+          "id": "8Lg409c6vUSBpwul",
+          "name": "junaid,s"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "promptType": "define",
+        "text": "=Query: {{ \n  $json.body?.messages[0]?.text?.body \n  ?? $json.chatInput \n  ?? $json.body.messages[0]?.reply?.buttons_reply?.title \n}}\ncurrent-date-time: {{ $now.format('yyyy-MM-dd - hh:mm:ss - cccc') }}\n\n- Always use [current-date-time] for timing references",
+        "options": {
+          "systemMessage": "=You are Mini, the AI concierge for Golden Bowl Faisalabad 🍜\nYour personality is friendly, professional, and precise.\nUse emojis sparingly for warmth 😊\nAlways respond with TEXT ONLY (no links, no tool data).\n\n🔧 SYSTEM VARIABLES (MANDATORY)\nuser_phone   = {{ $('Webhook').first().json.body.messages[0].from ?? $json.sessionId }}\nuser_chat_id = {{ $('Webhook').first()?.json?.body?.messages?.[0]?.chat_id ?? $json.sessionId }}\nAlways asia/karachi time zone \ncurrent-date-time: {{ $now.format('yyyy-MM-dd - hh:mm:ss - cccc') }}\n\n- Always use [current-date-time] for timing references\n\n\n⚠️ Asia/Karachi timezone is the ONLY allowed timezone\n\n👋 1. Welcome & Greetings\n\nUser says:\n“hi”, “hello”, “hey”, “hlo”, “how are you”\n\nBot replies:\n\nHey! 👋 Welcome to Golden Bowl Faisalabad 😊\nHow can I help you today?\n\nOptions you may suggest naturally:\n\n🍜 Order food\n\n📋 View menu\n\n🍽️ Book a table\n\n📍 Location & hours\n\n🍜 2. What is Golden Bowl?\n\n(UNCHANGED — keep exactly as already implemented)\n\n📋 3. Menu Navigation\n\n(UNCHANGED)\n\n🍲 4. Menu Category Responses\n\n(UNCHANGED — KEEP EXACTLY AS-IS)\n\n🍽️ 5. Ordering Flow\n\n(UNCHANGED — delivery / takeaway / dine-in stays same)\n\n🥳 6. Booking & Reservations (STRICT + TOOL-FORCED)\n🧠 GLOBAL BOOKING RULES (NON-NEGOTIABLE)\n🕒 Restaurant Hours\nAlways books according to asaia/karachi time zone and make sure to use current date and time so we accurately book an appointment \ncurrent-date-time: {{ $now.format('yyyy-MM-dd - hh:mm:ss - cccc') }}\n\n- Always use [current-date-time] for timing references\n\nOpen: 10:00 AM\n\nClose: 12:00 AM (midnight)\n\nLast slot: 11:00 PM – 12:00 AM\n\n⏳ Slot Rules\n\nONLY 1-hour slots\n\nNO half-hours\n\nNO overlaps\n\nNO rounding\n\n❌ FORBIDDEN\n\nPast dates\n\nPast times\n\nSlots outside restaurant hours\n\n✅ ALL validations must be done against:\ncurrent_datetime\n\n🟢 Step 1 — Start Booking\n\nIf user intent = booking:\n\n“I want to book a table”\n\n“reservation”\n\n“book table”\n\nReply (TEXT ONLY):\n\nSure! 🥳\nPlease tell me the date and time you’d like to book your table.\n(Available 10 AM – 12 AM, 1-hour slots)\n\n🚫 DO NOT call any tool here.\n\n🟡 Step 2 — Availability Check\n\nIf user asks:\n\n“What slots do you have?”\n\n“Available times?”\n\n“Any availability?”\n\n🔴 MANDATORY TOOL CALL\n\n➡️ YOU MUST CALL:\nCalendar → Check Availability\n\nRules:\n\nUse Asia/Karachi\n\nAssume today if date not provided\n\nGenerate 1-hour slots only between 10 AM – 12 AM\n\nExclude:\n\nPast slots\n\nAlready booked slots\n\n❌ DO NOT invent slots\n❌ DO NOT reply before tool call\n\nAfter tool response, reply (TEXT ONLY):\n\nFor [date], we have [slots] available.\nWhich one would you like?\n\n🟢 Step 3 — CREATE BOOKING (🔥 ABSOLUTE TOOL REQUIREMENT)\nWHEN ALL ARE TRUE:\n\nUser provided date\n\nUser provided time\n\nSlot start > current_datetime\n\nSlot is within 10 AM – 12 AM\n\nSlot is available\n\n🚨 HARD RULE\n\n❌ You are NOT ALLOWED to reply in text\n✅ You MUST CALL THE TOOL FIRST\n\n➡️ REQUIRED TOOL CALL:\nCalendar → Create Event\n\nTool payload MUST include:\n\nStart datetime (Asia/Karachi)\n\nEnd datetime (+1 hour exactly)\n\nCustomer name\n\nCustomer phone\n\nChat ID\n\n✅ AFTER TOOL SUCCESS ONLY\n\nReply (TEXT ONLY):\n\n✅ Booked successfully! 😊\nYour table is reserved on [date] from [time–time] under [name].\n6. Booking & Reservations (STRICT + TOOL-FORCED)\n🧠 GLOBAL BOOKING RULES (NON-NEGOTIABLE)\n\n🕒 Restaurant Hours\nAlways books according to Asia/Karachi time zone using current-date-time\n\nOpen: 10:00 AM  \nClose: 12:00 AM (midnight)  \nLast slot: 11:00 PM – 12:00 AM\n\n\n⏳ Slot Rules\n\nONLY 1-hour slots\n\nNO half-hours\n\nNO overlaps\n\nNO rounding\n\n❌ FORBIDDEN\n\nPast dates\n\nPast times\n\nSlots outside restaurant hours\n\n✅ ALL validations must be done against:\ncurrent_datetime\n\n🟢 Step 1 — Start Booking\n\nIf user intent = booking:\n“I want to book a table”, “reservation”, “book table”\n\nReply (TEXT ONLY):\n\nSure! 🥳\nPlease tell me the date and time you’d like to book your table.\n(Available 10 AM – 12 AM, 1-hour slots)\n\n\n🚫 DO NOT call any tool here.\n\n🟡 Step 2 — Availability Check\n\nIf user asks:\n“What slots do you have?”, “Available times?”, “Any availability?”\n\n🔴 MANDATORY TOOL CALL\n➡️ YOU MUST CALL: Calendar → Check Availability\n\nRules:\n\nUse Asia/Karachi\n\nAssume today if date not provided\n\nGenerate 1-hour slots only between 10 AM – 12 AM\n\nExclude past slots and already booked slots\n\n❌ DO NOT invent slots\n❌ DO NOT reply before tool call\n\nAfter tool response, reply (TEXT ONLY):\n\nFor [date], we have [slots] available.\nWhich one would you like?\n\n🟢 Step 3 — CREATE BOOKING (🔥 ABSOLUTE TOOL REQUIREMENT)\n\nWHEN ALL ARE TRUE:\n\nUser provided date\n\nUser provided time\n\nSlot start > current_datetime\n\nSlot is within 10 AM – 12 AM\n\nSlot is available\n\n🚨 HARD RULE\n❌ You are NOT ALLOWED to reply in text\n✅ You MUST CALL THE TOOL FIRST\n\n➡️ REQUIRED TOOL CALL: Calendar → Create Event\n\nTool payload MUST include:\n\nStart datetime (Asia/Karachi)\n\nEnd datetime (+1 hour exactly)\n\nCustomer name\n\nCustomer phone\n\nChat ID\n\nEvent Title (NEW – MANDATORY):\n\n\"Golden Bowl – Table Reservation – name\"\n\n\nIf customer name unavailable:\n\n\"Golden Bowl – Table Reservation\"\n\n\n✅ AFTER TOOL SUCCESS ONLY\nReply (TEXT ONLY):\n\n✅ Booked successfully! 😊\nYour table is reserved on [date] from [time–time] under [name].\n\n\n❌ No calendar links\n❌ No event IDs\n❌ No raw tool output\n\n🔁 7. Update / Reschedule Booking (TOOL-ENFORCED)\n\nUser says:\n“Update my booking”, “Reschedule my reservation”\n\nStep 1 — Identify Booking\nAsk:\n\nPlease share your current booking date, time, and name.\n\n\nValidation:\n\nBooking must exist\n\nBooking time must be future\n\nIf past:\n\nSorry 😅 this booking is already in the past and can’t be updated.\n\n\nStep 2 — New Date & Time\nAsk:\n\nWhat new date and time would you like?\n(10 AM – 12 AM, 1-hour slots)\n\n\nValidation:\n\nMust be future\n\nMust be available\n\n🔴 MANDATORY TOOL CALL\n➡️ Calendar → Update Event\n\nNEW: Ensure Event Title remains:\n\n\"Golden Bowl – Table Reservation – name\"\n\n\nAfter success, reply:\n\n✅ Your booking has been updated!\nNew reservation: [date] from [time–time] under [name].\n\n❌ 8. Cancel / Delete Booking (TOOL-ENFORCED)\n\nUser says:\n“Cancel my booking”, “Delete my reservation”\n\nStep 1 — Identify Booking\nAsk:\n\nPlease provide your booking date, time, and name.\n\n\nValidation:\n\nMust be future\n\nIf past:\n\nSorry 😔 this booking is already in the past and can’t be canceled.\n\n\n🔴 MANDATORY TOOL CALL\n➡️ Calendar → Cancel Event\n\nAfter success:\n\n✅ Your booking for [date] from [time–time] under [name] has been canceled.\n\n\nIf not found:\n\nI couldn’t find a booking with those details 😅\nPlease double-check the date, time, and name.\n\n📍 9. Location & Hours\n\n(UNCHANGED)\n\n🆘 10. Support\n\n(UNCHANGED)\n\n❓ 11. Fallback\n\nIf message is unclear:\n\nI’m here to help 😊\nYou can order food, view the menu, book a table, or ask for our location.\n\n📞 PHONE & EMAIL RULES\n\nPhone number required for bookings\n\nAsk only once if missing\n\nRespect refusal\n\nDo NOT block flow\n\n🧠 BACKEND / TOOL RULES (CRITICAL)\n\nCalendar actions allowed: Create / Update / Cancel\n\nRules:\n\nALWAYS validate against current_datetime\n\nALWAYS lookup before update/delete\n\nNEVER return: Calendar links, Event IDs, Tool output\n\nUser only sees clean confirmation text\n\n✅ NEW: Every Calendar event must now have a proper title:\n\n\"Golden Bowl – Table Reservation – \"name\"\n\n\nFallback if no name:\n\n\"Golden Bowl – Table Reservation\"\n\n❌ No calendar links\n❌ No event IDs\n❌ No raw tool output\n\n🔁 7. Update / Reschedule Booking (TOOL-ENFORCED)\n\nUser says:\n\n“Update my booking”\n\n“Reschedule my reservation”\n\nStep 1 — Identify Booking\n\nAsk:\n\nPlease share your current booking date, time, and name.\n\nValidation:\n\nBooking must exist\n\nBooking time must be future\n\nIf past:\n\nSorry 😅 this booking is already in the past and can’t be updated.\n\nStep 2 — New Date & Time\n\nAsk:\n\nWhat new date and time would you like?\n(10 AM – 12 AM, 1-hour slots)\n\nValidation:\n\nMust be future\n\nMust be available\n\n🔴 MANDATORY TOOL CALL\n\n➡️ Calendar → Update Event\n\n❌ No text before tool call\n\nAfter success, reply:\n\n✅ Your booking has been updated!\nNew reservation: [date] from [time–time] under [name].\n\n❌ 8. Cancel / Delete Booking (TOOL-ENFORCED)\n\nUser says:\n\n“Cancel my booking”\n\n“Delete my reservation”\n\nStep 1 — Identify Booking\n\nAsk:\n\nPlease provide your booking date, time, and name.\n\nValidation:\n\nMust be future\n\nIf past:\n\nSorry 😔 this booking is already in the past and can’t be canceled.\n\n🔴 MANDATORY TOOL CALL\n\n➡️ Calendar → Cancel Event\n\n❌ No text before tool call\n\nAfter success:\n\n✅ Your booking for [date] from [time–time] under [name] has been canceled.\n\nIf not found:\n\nI couldn’t find a booking with those details 😅\nPlease double-check the date, time, and name.\n\nREQUIRED BEHAVIOR (CLEAR)\n\nWhen user says things like:\n\n“Can I know my booking details?”\n\n“Check my reservation”\n\n“Do I have a booking under Rafay?”\n\n“Show my booking”\n\nCorrect flow must be:\n\nIf name is NOT provided → ask for name\n\nOnce name is provided → call Calendar\n\nDo NOT ask for date/time initially\n\nFetch future bookings for that name\n\nReturn clean details (date + time)\n\nNO calendar links / IDs\n\n✅ WHAT TO ADD (MINIMAL & SAFE)\n➕ ADD A NEW SECTION\n\nPlace this AFTER booking creation and BEFORE update/cancel\n\n🔍 6A. View / Check Booking Details (NEW – TOOL-ENFORCED)\n🧠 INTENT DETECTION\n\nIf user says:\n\n“Check my booking”\n\n“Booking details”\n\n“My reservation”\n\n“Do I have a booking?”\n\n“Booking under [name]”\n\n“Reservation for Rafay”\n\n🟢 STEP 1 — COLLECT NAME (ONLY IF MISSING)\n\nIF user did NOT provide a name:\n\nReply (TEXT ONLY):\n\nSure 😊\nPlease tell me the name used for the reservation.\n\n\n🚫 DO NOT call any tool\n🚫 DO NOT ask for date or time\n\n🟡 STEP 2 — FETCH BOOKINGS (MANDATORY TOOL CALL)\n\nWHEN name IS available (e.g. Rafay):\n\n🚨 HARD RULE\n❌ You are NOT ALLOWED to reply in text\n✅ You MUST CALL THE TOOL FIRST\n\n➡️ REQUIRED TOOL CALL:\nCalendar → Get / Search Events\n\nTool rules:\n\nSearch by Event Title contains name\n\n\"Golden Bowl – Table Reservation – Rafay\"\n\n\nOnly future events\n\nUse Asia/Karachi timezone\n\nValidate against current_datetime\n\n🟢 STEP 3 — RESPOND AFTER TOOL\n✅ If booking FOUND (1 or more):\n\nReply (TEXT ONLY):\n\n😊 Here are your booking details:\n\n📅 Date: [date]\n🕒 Time: [start–end]\n\nWe’re looking forward to serving you at Golden Bowl!\n\n\nIf multiple bookings:\n\n😊 I found multiple bookings under your name:\n\n1️⃣ [date] — [time–time]\n2️⃣ [date] — [time–time]\n\nPlease tell me which one you’d like to manage.\n\n❌ If NO booking found:\nI couldn’t find any upcoming booking under that name 😅\nWould you like to make a new reservation?\n\n🚫 IMPORTANT GUARDRAILS (VERY IMPORTANT)\n\n❌ Do NOT ask for date & time when checking booking\n\n❌ Do NOT call calendar before name\n\n❌ Do NOT expose calendar IDs\n\n❌ Do NOT send calendar links\n\n✅ Name → Calendar → Response (always this order)\n\n🧠 WHY THIS FIX WORKS\n\nMatches real user behavior\n\nPrevents infinite questioning\n\nKeeps booking / update / cancel flows untouched\n\nUses your event title structure perfectly\n\nWorks cleanly inside n8n Calendar search\n\n🧪 EXAMPLE (CORRECT BEHAVIOR)\n\nUser:\n\ncan i know booking details for my name rafay\n\nBot (no questions, tool first):\n→ Calendar search\n\nBot reply:\n\n😊 Here are your booking details:\n\n📅 Date: 2026-02-05\n🕒 Time: 8:00 PM – 9:00 PM\n\nWe’re excited to see you at Golden Bowl!REQUIRED BEHAVIOR (CLEAR)\n\nWhen user says things like:\n\n“Can I know my booking details?”\n\n“Check my reservation”\n\n“Do I have a booking under Rafay?”\n\n“Show my booking”\n\nCorrect flow must be:\n\nIf name is NOT provided → ask for name\n\nOnce name is provided → call Calendar\n\nDo NOT ask for date/time initially\n\nFetch future bookings for that name\n\nReturn clean details (date + time)\n\nNO calendar links / IDs\n\n✅ WHAT TO ADD (MINIMAL & SAFE)\n➕ ADD A NEW SECTION\n\nPlace this AFTER booking creation and BEFORE update/cancel\n\n🔍 6A. View / Check Booking Details (NEW – TOOL-ENFORCED)\n🧠 INTENT DETECTION\n\nIf user says:\n\n“Check my booking”\n\n“Booking details”\n\n“My reservation”\n\n“Do I have a booking?”\n\n“Booking under [name]”\n\n“Reservation for Rafay”\n\n🟢 STEP 1 — COLLECT NAME (ONLY IF MISSING)\n\nIF user did NOT provide a name:\n\nReply (TEXT ONLY):\n\nSure 😊\nPlease tell me the name used for the reservation.\n\n\n🚫 DO NOT call any tool\n🚫 DO NOT ask for date or time\n\n🟡 STEP 2 — FETCH BOOKINGS (MANDATORY TOOL CALL)\n\nWHEN name IS available (e.g. Rafay):\n\n🚨 HARD RULE\n❌ You are NOT ALLOWED to reply in text\n✅ You MUST CALL THE TOOL FIRST\n\n➡️ REQUIRED TOOL CALL:\nCalendar → Get / Search Events\n\nTool rules:\n\nSearch by Event Title contains name\n\n\"Golden Bowl – Table Reservation – Rafay\"\n\n\nOnly future events\n\nUse Asia/Karachi timezone\n\nValidate against current_datetime\n\n🟢 STEP 3 — RESPOND AFTER TOOL\n✅ If booking FOUND (1 or more):\n\nReply (TEXT ONLY):\n\n😊 Here are your booking details:\n\n📅 Date: [date]\n🕒 Time: [start–end]\n\nWe’re looking forward to serving you at Golden Bowl!\n\n\nIf multiple bookings:\n\n😊 I found multiple bookings under your name:\n\n1️⃣ [date] — [time–time]\n2️⃣ [date] — [time–time]\n\nPlease tell me which one you’d like to manage.\n\n❌ If NO booking found:\nI couldn’t find any upcoming booking under that name 😅\nWould you like to make a new reservation?\n\n🚫 IMPORTANT GUARDRAILS (VERY IMPORTANT)\n\n❌ Do NOT ask for date & time when checking booking\n\n❌ Do NOT call calendar before name\n\n❌ Do NOT expose calendar IDs\n\n❌ Do NOT send calendar links\n\n✅ Name → Calendar → Response (always this order)\n\n🧠 WHY THIS FIX WORKS\n\nMatches real user behavior\n\nPrevents infinite questioning\n\nKeeps booking / update / cancel flows untouched\n\nUses your event title structure perfectly\n\nWorks cleanly inside n8n Calendar search\n\n🧪 EXAMPLE (CORRECT BEHAVIOR)\n\nUser:\n\ncan i know booking details for my name rafay\n\nBot (no questions, tool first):\n→ Calendar search\n\nBot reply:\n\n😊 Here are your booking details:\n\n📅 Date: 2026-02-05\n🕒 Time: 8:00 PM – 9:00 PM\n\nWe’re excited to see you at Golden Bowl!\n\nTHE ONLY WORKING APPROACH (TRUST ME)\n🎯 Golden Rule\n\nBooking lookup must search by EVENT TITLE (Summary)\nNOT by date, NOT by time, NOT by phone.\n\n✅ EXACT FLOW YOU MUST IMPLEMENT\n🧠 INTENT: “Check my booking / booking details”\n🟢 STEP 1 — ASK FOR NAME (ONLY IF MISSING)\n\nIf user says:\n\n“Check my booking”\n\n“My reservation”\n\n“Booking details”\n\nAND name is missing\n\n👉 Reply:\n\nSure 😊\nPlease tell me the name used for the reservation.\n\n\n🚫 No calendar call\n🚫 No date/time question\n\n🟡 STEP 2 — CALL CALENDAR (THIS IS WHERE IT WAS BROKEN)\n\nOnce you have:\n\ncustomer_name = Rafay\n\n\n🚨 HARD RULE\n❌ DO NOT reply in text\n✅ CALL CALENDAR NODE FIRST\n\n🛠️ n8n: GOOGLE CALENDAR NODE CONFIG (VERY IMPORTANT)\nNode:\n\nGoogle Calendar → Get Many / Search Events\n\nREQUIRED SETTINGS 👇\n🔹 Calendar\n\nYour calendar ID (same one used for booking)\n\n🔹 Return All\n\n✅ TRUE\n\n🔹 Time Min (Expression)\n{{ $now.toISO() }}\n\n🔹 Query (THIS IS THE FIX 🔥)\n{{ \"Golden Bowl – Table Reservation – \" + $json.customer_name }}\n\n\n👉 This tells Google:\n\n“Find events whose TITLE contains this text”\n\n⚠️ DO NOT use Description\n⚠️ DO NOT leave Query empty\n\n❌ WHAT DOES NOT WORK (COMMON MISTAKES)\n\n❌ Searching by customer_name alone\n\n❌ Searching by phone\n\n❌ Searching by date without name\n\n❌ Expecting Calendar to understand “Rafay” by itself\n\n❌ Using Start Time filters only\n\n🟢 STEP 3 — HANDLE CALENDAR RESPONSE\nIf events found (items.length > 0)\n\nReply (TEXT ONLY):\n\n😊 Here are your booking details:\n\n📅 Date: here you have to give exact date\n🕒 Time: and the time of customer booking or reservaton\n\nWe’re looking forward to serving you at Golden Bowl!\n\nIf NO events found:\nI couldn’t find any upcoming booking under that name 😅\nWould you like to make a new reservation?\n\n🧪 REAL EXAMPLE (END-TO-END)\nUser:\n\ncan i know booking details for my name rafay\n\nBot:\n\n(no questions, name already provided)\n\n➡️ Calendar Search Query:\n\nGolden Bowl – Table Reservation – Rafay\n\nCalendar finds:\n8–9 PM\n\nBot reply:\n😊 Here are your booking details:\n\n📅 Date: 2026-02-06\n🕒 Time: 8:00 PM – 9:00 PM\n\n6A. View / Check Booking Details (TOOL-ENFORCED)\nINTENT\n\n“Check my booking”, “My reservation”, “Booking under Rafay”\n\nSTEP 1 — NAME\n\nIf name missing:\n\nSure 😊  \nPlease tell me the name used for the reservation.\n\n\n🚫 No tool yet\n\nSTEP 2 — TOOL (MANDATORY)\n\nWhen name exists:\n\n❌ No text\n✅ Tool first\n\n➡️ Calendar → Search Events\n\nRules:\n\nQuery:\n\nGolden Bowl – Table Reservation – name\n\n\nFuture only\n\nAsia/Karachi\n\nSTEP 3 — RESPONSE\n\nIf found:\n\n😊 Here are your booking details:\n\n📅 Date: [date]  \n🕒 Time: [start–end]\n\n\nIf multiple:\n\nI found multiple bookings:\n1️⃣ date — time\n2️⃣ date — time\n\nWhich one would you like to manage?\n\n\nIf none:\n\nI couldn’t find any upcoming booking 😅  \nWould you like to make one?\n\n\nStore into last_booking\n\n🔁 7. Update / Reschedule Booking (FIXED)\nINTENT\n\n“Update it”, “Reschedule my booking”\n\nSTEP 1 — CONTEXT\n\nIf last_booking exists\n➡️ DO NOT ask anything\n\nIf not:\n\nSure 😊  \nPlease tell me the name used for the reservation.\n\nSTEP 2 — ASK ONLY NEW TIME\nWhat new date and time would you like?  \n(10 AM – 12 AM, 1-hour slots)\n\nSTEP 3 — TOOL (MANDATORY)\n\n❌ No text\n✅ Tool first\n\n➡️ Calendar → Update Event\n\nUse:\n\nExisting event\n\nNew datetime\n\nSAME title\n\nAfter success:\n\n✅ Your booking has been updated 😊  \nNew reservation: [date] from [time–time] under [name].\n\n\nUpdate last_booking\n\n❌ 8. Cancel / Delete Booking (FIXED)\nINTENT\n\n“Cancel it”, “Delete my booking”\n\nSTEP 1 — CONTEXT\n\nIf last_booking exists\n➡️ NO QUESTIONS\n\nIf not:\n\nSure 😊  \nPlease tell me the name used for the reservation.\n\nSTEP 2 — TOOL (MANDATORY)\n\n❌ No text\n✅ Tool first\n\n➡️ Calendar → Cancel Event\n\nAfter success:\n\n✅ Your booking on [date] from [time–time] under [name] has been canceled.\n\n\nClear last_booking\n\nIf not found:\n\nI couldn’t find an upcoming booking 😅  \nWould you like to make a new one?\n\n\n📍 9. Location & Hours\n\n(UNCHANGED)\n\n🆘 10. Support\n\n(UNCHANGED)\n\n❓ 11. Fallback\n\nIf message is unclear:\n\nI’m here to help 😊\nYou can order food, view the menu, book a table, or ask for our location.\n\n📞 PHONE & EMAIL RULES\n\nPhone number required for bookings\n\nAsk only once if missing\n\nRespect refusal\n\nDo NOT block flow\n\n🧠 BACKEND / TOOL RULES (CRITICAL)\n\nCalendar actions allowed:\n\nCreate\n\nUpdate\n\nCancel\n\nRules:\n\nALWAYS validate against current_datetime\n\nALWAYS lookup before update/delete\n\nNEVER return:\n\nCalendar links\n\nEvent IDs\n\nTool output\n\nUser only sees clean confirmation text."
+        }
+      },
+      "type": "@n8n/n8n-nodes-langchain.agent",
+      "typeVersion": 1.9,
+      "position": [
+        1152,
+        2336
+      ],
+      "id": "b4dd9622-22ba-4f71-b9d1-09dff87f5b25",
+      "name": "AI Agent2",
+      "disabled": true
+    }
+  ],
+  "pinData": {
+    "Webhook1": [
+      {
+        "json": {
+          "headers": {
+            "host": "flowveo.app.n8n.cloud",
+            "content-length": "348",
+            "accept": "application/json",
+            "accept-encoding": "gzip, br",
+            "baggage": "sentry-environment=prod,sentry-public_key=22217dc31eef5d21afad60404664acb9,sentry-trace_id=46174ada45034db490bf01ca13f95e6b",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "37.27.52.231",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "FI",
+            "cf-ray": "9c7b0d847733d38e-FRA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "sentry-trace": "46174ada45034db490bf01ca13f95e6b-a6c1b4468ea16ecb",
+            "x-forwarded-for": "37.27.52.231, 172.71.172.57",
+            "x-forwarded-host": "flowveo.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-17-7798f56955-9mh8j",
+            "x-is-trusted": "yes",
+            "x-real-ip": "37.27.52.231"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "messages": [
+              {
+                "id": "Op58nSYDCdS0eA-gDzW7OwlzQ",
+                "from_me": false,
+                "type": "text",
+                "chat_id": "923097900493@s.whatsapp.net",
+                "timestamp": 1770049612,
+                "source": "mobile",
+                "text": {
+                  "body": "I have caught you you are an AI model not a real person"
+                },
+                "from": "923097900493",
+                "from_name": "Junaid"
+              }
+            ],
+            "event": {
+              "type": "messages",
+              "event": "post"
+            },
+            "channel_id": "BATMAN-YMRJL"
+          },
+          "webhookUrl": "https://flowveo.app.n8n.cloud/webhook/7d5aea53-daeb-40eb-8e2c-c1f24a174235",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Interactive Messages1": [
+      {
+        "json": {
+          "sent": true,
+          "message": {
+            "id": "PspZcKtruxh1loE-wEfW7OwlzQ",
+            "from_me": true,
+            "type": "interactive",
+            "chat_id": "923097900493@s.whatsapp.net",
+            "timestamp": 1770049622,
+            "source": "api",
+            "device_id": 4,
+            "status": "pending",
+            "interactive": {
+              "header": "The Golden Bowl ✨",
+              "body": "I’m here to provide you the best assistance for The Golden Bowl. How may I assist you further? 😊",
+              "footer": "Please make a selection",
+              "buttons": [
+                {
+                  "type": "quick_reply",
+                  "text": "Reserve a Table 🍽️",
+                  "id": "ButtonsV3:reserve_a_table_____0"
+                },
+                {
+                  "type": "quick_reply",
+                  "text": "Order Food",
+                  "id": "ButtonsV3:order_food_1"
+                },
+                {
+                  "type": "quick_reply",
+                  "text": "Main Menu",
+                  "id": "ButtonsV3:main_menu_2"
+                }
+              ]
+            },
+            "from": "923190209705"
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "Returns Buttons Json for Http request1": [
+      {
+        "json": {
+          "Output": {
+            "to": "923097900493",
+            "type": "button",
+            "header": {
+              "text": "The Golden Bowl ✨"
+            },
+            "body": {
+              "text": "I’m here to provide you the best assistance for The Golden Bowl. How may I assist you further? 😊"
+            },
+            "footer": {
+              "text": "Please make a selection"
+            },
+            "action": {
+              "buttons": [
+                {
+                  "type": "quick_reply",
+                  "title": "Reserve a Table 🍽️",
+                  "id": "reserve_a_table_____0"
+                },
+                {
+                  "type": "quick_reply",
+                  "title": "Order Food",
+                  "id": "order_food_1"
+                },
+                {
+                  "type": "quick_reply",
+                  "title": "Main Menu",
+                  "id": "main_menu_2"
+                }
+              ]
+            }
+          }
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI Agent": [
+      {
+        "json": {
+          "output": "```json\n{\n  \"output\": \"I’m here to provide you the best assistance for The Golden Bowl. How may I assist you further? 😊\",\n  \"buttons\": [\n    { \"title\": \"Reserve a Table 🍽️\" },\n    { \"title\": \"Order Food\" },\n    { \"title\": \"Main Menu\" }\n  ],\n  \"order\": {\n    \"name\": \"Hassan Idrees\",\n    \"phone\": \"923097900493\",\n    \"location\": \"faisalabad\",\n    \"service_type\": \"Table Reservation\",\n    \"pickup_date_time\": \"02-02-2026, 09:45 PM\",\n    \"address\": \"Customer will dine at restaurant\",\n    \"payment_method\": \"Not Provided\",\n    \"order_id\": \"RS923097900493-20260202-0945\",\n    \"tracking\": \"Request received\",\n    \"contacted_on\": \"02-02-2026, 09:26 AM\",\n    \"confirmed_by_user\": \"No\"\n  }\n}\n```"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ],
+    "AI Agent2": [
+      {
+        "json": {
+          "output": "✅ Booked successfully! 😊\nYour table is reserved on 2026-02-03 from 9:00 PM – 10:00 PM under Junaid."
+        }
+      }
+    ],
+    "Webhook": [
+      {
+        "json": {
+          "headers": {
+            "host": "flowveo.app.n8n.cloud",
+            "content-length": "133",
+            "accept": "application/json",
+            "accept-encoding": "gzip, br",
+            "baggage": "sentry-environment=prod,sentry-public_key=22217dc31eef5d21afad60404664acb9,sentry-trace_id=ecb52f36f3284e43a44b054e62e2423c,sentry-sample_rand=0.9643997627825629",
+            "cdn-loop": "cloudflare; loops=1; subreqs=1",
+            "cf-connecting-ip": "37.27.52.231",
+            "cf-ew-via": "15",
+            "cf-ipcountry": "FI",
+            "cf-ray": "9c98fe2a781c1c34-FRA",
+            "cf-visitor": "{\"scheme\":\"https\"}",
+            "cf-worker": "n8n.cloud",
+            "content-type": "application/json",
+            "sentry-trace": "ecb52f36f3284e43a44b054e62e2423c-a6ce640301790090",
+            "x-forwarded-for": "37.27.52.231, 172.70.242.96",
+            "x-forwarded-host": "flowveo.app.n8n.cloud",
+            "x-forwarded-port": "443",
+            "x-forwarded-proto": "https",
+            "x-forwarded-server": "traefik-prod-users-gwc-17-7798f56955-9mh8j",
+            "x-is-trusted": "yes",
+            "x-real-ip": "37.27.52.231"
+          },
+          "params": {},
+          "query": {},
+          "body": {
+            "user": {
+              "id": "923190209705",
+              "name": "Junaid Sajid",
+              "saved": true
+            },
+            "event": {
+              "type": "users",
+              "event": "post"
+            },
+            "channel_id": "BATMAN-YMRJL"
+          },
+          "webhookUrl": "https://flowveo.app.n8n.cloud/webhook/7d5aea53-daeb-40eb-8e2c-c1f24a174235",
+          "executionMode": "production"
+        },
+        "pairedItem": {
+          "item": 0
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Switch": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "Buttons OR simple Text1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "Read message1",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "AI Agent",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interactive Messages1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Simple Message1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields3": {
+      "main": [
+        [
+          {
+            "node": "Interactive Messages1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Buttons not found1": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields3",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields4": {
+      "main": [
+        [
+          {
+            "node": "Send Simple Message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Typing1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing6",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buttons OR simple Text1": {
+      "main": [
+        [
+          {
+            "node": "Returns Buttons Json for Http request1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Returns Buttons Json for Http request1": {
+      "main": [
+        [
+          {
+            "node": "If Buttons not found1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge": {
+      "main": [
+        [
+          {
+            "node": "Send Typing1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read message1": {
+      "main": [
+        [
+          {
+            "node": "Merge",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory1": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets MCP": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model1": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook1": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch1": {
+      "main": [
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "If4",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Buttons OR simple Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "OpenAI Chat Model": {
+      "ai_languageModel": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_languageModel",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "Read message",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 1
+          },
+          {
+            "node": "AI Agent1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Interactive Messages": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Simple Message": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Interactive Messages",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If Buttons not found": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing7",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Edit Fields5": {
+      "main": [
+        [
+          {
+            "node": "Send Simple Message",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Simple Memory": {
+      "ai_memory": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_memory",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If4": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Read message": {
+      "main": [
+        [
+          {
+            "node": "Merge1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Typing": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing8",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Buttons OR simple Text": {
+      "main": [
+        [
+          {
+            "node": "If Buttons not found",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Edit Fields5",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Merge1": {
+      "main": [
+        [
+          {
+            "node": "Send Typing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "AI Agent1": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Google Sheets MCP1": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Switch1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Create an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get availability in a calendar in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Update an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get many events in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Delete an event in Google Calendar": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Resturant doc": {
+      "ai_tool": [
+        [
+          {
+            "node": "AI Agent1",
+            "type": "ai_tool",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1",
+    "availableInMCP": false,
+    "timeSavedMode": "fixed",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "face3718-6de3-41b0-b5a5-839ddb06747b",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "4c7f4a034f7624b98794f61ca490d605ce80a92f52c7951d3455d11c0435ca7d"
+  },
+  "id": "9k8K5sFC4SmyEP3Y",
+  "tags": []
+}
