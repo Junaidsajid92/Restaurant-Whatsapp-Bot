@@ -17,15 +17,15 @@ An intelligent WhatsApp chatbot built with **n8n** that serves as an AI concierg
 
 The workflow consists of several key components:
 
-### 1. **Webhook Entry Point** (`Webhook1`)
+### 1. **Webhook Entry Point**
 - Receives incoming WhatsApp messages from Whapi.cloud
-- Webhook endpoint: `/7d5aea53-daeb-40eb-8e2c-c1f24a174235`
+- Webhook configured in your n8n instance
 
 ### 2. **Message Processing Pipeline**
-- **User Filter** (`If3`) - Validates message isn't from the bot
-- **Message Type Router** (`Switch`) - Routes based on message type (text/reply/image)
-- **Message Status** (`Read message1`) - Marks messages as read
-- **Typing Indicator** (`Send Typing1`) - Shows bot is composing
+- **User Filter** - Validates message isn't from the bot
+- **Message Type Router** - Routes based on message type (text/reply/image)
+- **Message Status** - Marks messages as read
+- **Typing Indicator** - Shows bot is composing
 
 ### 3. **AI Engine**
 - **AI Agent** - Orchestrates conversation with system prompt
@@ -34,9 +34,9 @@ The workflow consists of several key components:
 - **Google Sheets MCP** - Accesses restaurant menu and information
 
 ### 4. **Response Generation**
-- **Code Processing** (`Code`, `Code1`) - Validates and formats AI output
-- **Button Detection** (`Buttons OR simple Text1`) - Determines response format
-- **JSON Formatting** (`Returns Buttons Json for Http request1`) - Prepares interactive messages
+- **Code Processing** - Validates and formats AI output
+- **Button Detection** - Determines response format
+- **JSON Formatting** - Prepares interactive messages
 
 ### 5. **Message Delivery**
 - **Send Simple Message** - Delivers text-only responses
@@ -45,7 +45,7 @@ The workflow consists of several key components:
 
 ## 🤖 AI Concierge Persona
 
-The bot operates as **"Mini"**, the AI concierge for **The Golden Bowl** restaurant with these traits:
+The bot operates as an AI concierge for your restaurant with these traits:
 - Friendly and efficient
 - Helpful and professional
 - Restaurant-specific knowledge
@@ -60,12 +60,14 @@ The bot operates as **"Mini"**, the AI concierge for **The Golden Bowl** restaur
 ## 🔧 Configuration
 
 ### Required Credentials
-1. **OpenAI API** - For GPT-4 access
+1. **OpenAI API Key** - For GPT-4 access
 2. **Whapi.cloud Bearer Token** - WhatsApp message sending
 3. **Whapi.cloud Header Auth** - Message read status and presence
 
+> ⚠️ **Important**: Store all credentials securely in n8n's credential management system. Never commit API keys or tokens to version control.
+
 ### Environment Setup
-- Bot ignores messages from: `923190209705` (admin number)
+- Configure admin number filtering in the workflow
 - Session management uses chat ID from incoming messages
 - Conversation memory window maintains context
 
@@ -76,7 +78,7 @@ WhatsApp Message
        ↓
     Webhook
        ↓
-  User Filter (If3)
+  User Filter
        ↓
 Message Type Switch
        ↓
@@ -103,13 +105,14 @@ Format Detection (Buttons or Text)
 
 ### Installation
 1. Import the workflow JSON into your n8n instance
-2. Configure credentials:
-   - OpenAI API credentials
+2. Configure credentials in n8n:
+   - OpenAI API key
    - Whapi.cloud Bearer token
    - Whapi.cloud Header authentication
-3. Enable the webhook and get the unique URL
+3. Enable the webhook and get the unique URL from n8n
 4. Configure Whapi.cloud webhook to point to your n8n instance
-5. Customize the system prompt in the AI Agent node for your restaurant
+5. Update the AI Agent node with your restaurant details
+6. Configure admin number filtering as needed
 
 ### Testing
 1. Send a WhatsApp message to your configured number
@@ -128,7 +131,7 @@ Format Detection (Buttons or Text)
 
 ### Decision Nodes
 - **If** - Validates text or reply messages exist
-- **If3** - Filters messages from admin number
+- **User Filter** - Filters messages from admin/bot
 - **If Buttons not found** - Checks if buttons were generated
 - **Buttons OR simple Text** - Determines response format
 
@@ -149,7 +152,7 @@ Format Detection (Buttons or Text)
 ### Simple Text Response
 ```json
 {
-  "to": "923190209705",
+  "to": "<RECIPIENT_PHONE>",
   "body": "Your response text",
   "typing_time": 1
 }
@@ -158,7 +161,7 @@ Format Detection (Buttons or Text)
 ### Interactive Button Response
 ```json
 {
-  "to": "923190209705",
+  "to": "<RECIPIENT_PHONE>",
   "output": {
     "buttons": [
       {"title": "Option 1"},
@@ -171,10 +174,13 @@ Format Detection (Buttons or Text)
 
 ## 🔐 Security Considerations
 
-- Bearer token stored in n8n credentials
-- Admin number filtering prevents unauthorized access
-- Session isolation per chat_id
-- All communication over HTTPS to Whapi.cloud
+- **Store Credentials Securely**: Use n8n's credential management, never hardcode API keys
+- **Environment Variables**: Use environment variables for sensitive data
+- **Admin Filtering**: Configure admin number in the workflow to prevent unauthorized access
+- **Session Isolation**: Each chat has isolated conversation memory
+- **HTTPS Only**: All communication with external APIs uses HTTPS
+- **Rate Limiting**: Implement rate limiting to prevent abuse
+- **Audit Logging**: Monitor n8n execution logs for suspicious activity
 
 ## 📈 Monitoring & Debugging
 
@@ -182,6 +188,7 @@ Format Detection (Buttons or Text)
 - View logs in Code nodes for JSON validation
 - Monitor Whapi.cloud API response codes
 - Verify conversation memory in Simple Memory node
+- Set up alerts for failed executions
 
 ## 🛠️ Customization
 
@@ -191,12 +198,21 @@ Edit the system message in the **AI Agent** node to change:
 - Available services
 - Response tone and guidelines
 - Special instructions
+- Operating hours and policies
 
 ### Add New Features
 - Connect additional APIs in the workflow
 - Add more message type handlers in Switch nodes
 - Extend Google Sheets integration for dynamic data
 - Implement analytics tracking
+- Add payment processing integration
+
+### Extend Capabilities
+- Integrate with reservation systems
+- Connect to POS systems
+- Add inventory management
+- Implement loyalty programs
+- Enable multi-language support
 
 ## 📞 Support
 
@@ -205,10 +221,33 @@ For issues or questions:
 - Review OpenAI API status for model availability
 - Verify n8n webhook URLs are correctly configured
 - Test credential authentication in credential edit panel
+- Review n8n community forums and documentation
+
+## 🔄 Best Practices
+
+1. **Regular Testing** - Test the bot regularly with various inputs
+2. **Update AI Persona** - Keep restaurant information up-to-date
+3. **Monitor Logs** - Review execution logs for errors or unusual patterns
+4. **Backup Configuration** - Export workflow regularly
+5. **Update Dependencies** - Keep n8n and AI models current
+6. **Security Audits** - Periodically review security settings
 
 ## 📄 License
 
 This project is open source. Modify and use as needed for your restaurant.
+
+## 📋 Environment Variables Reference
+
+Consider using these environment variables for configuration:
+
+```
+OPENAI_API_KEY=<your-api-key>
+WHAPI_BEARER_TOKEN=<your-token>
+WHAPI_HEADER_AUTH=<your-header-auth>
+ADMIN_PHONE_NUMBER=<admin-number>
+RESTAURANT_NAME=<restaurant-name>
+N8N_WEBHOOK_URL=<your-webhook-url>
+```
 
 ---
 
